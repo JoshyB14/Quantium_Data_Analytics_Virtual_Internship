@@ -21,7 +21,7 @@ sns.set_style("darkgrid")
 # ## Data importing
 
 # %%
-purchase_data = pd.read_csv('../data/QVI_purchase_behaviour.csv')
+purchase_data = pd.read_csv('../Quantium_Data_Analytics_Virtual_Internship/data/QVI_purchase_behaviour.csv')
 purchase_data.head()
 
 
@@ -38,11 +38,11 @@ purchase_data.nunique()
 
 
 # %%
-purchase_data.isnull().sum() # missing values - none
+purchase_data.isnull().sum()  # missing values - none
 
 
 # %%
-transaction_data = pd.read_csv('../data/QVI_transaction_data.csv')
+transaction_data = pd.read_csv('../Quantium_Data_Analytics_Virtual_Internship/data/QVI_transaction_data.csv')
 transaction_data.head()
 
 
