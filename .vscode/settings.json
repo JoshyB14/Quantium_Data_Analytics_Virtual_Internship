@@ -1,5 +1,6 @@
 {
-    "python.linting.enabled": true,
+    "python.linting.enabled": false,
     "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true
+    "python.linting.flake8Enabled": true,
+    "python.pythonPath": "/Users/joshbryden/opt/miniconda3/envs/datasci/bin/python"
 }
