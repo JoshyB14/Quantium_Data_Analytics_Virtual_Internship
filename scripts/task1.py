@@ -21,7 +21,7 @@ sns.set_style("darkgrid")
 # ## Data importing
 
 # %%
-purchase_data = pd.read_csv('../Quantium_Data_Analytics_Virtual_Internship/data/QVI_purchase_behaviour.csv')
+purchase_data = pd.read_csv('../data/QVI_purchase_behaviour.csv')
 purchase_data.head()
 
 
@@ -38,11 +38,11 @@ purchase_data.nunique()
 
 
 # %%
-purchase_data.isnull().sum()  # missing values - none
+purchase_data.isnull().sum() # missing values - none
 
 
 # %%
-transaction_data = pd.read_csv('../Quantium_Data_Analytics_Virtual_Internship/data/QVI_transaction_data.csv')
+transaction_data = pd.read_csv('../data/QVI_transaction_data.csv')
 transaction_data.head()
 
 
@@ -318,5 +318,8 @@ stats.ttest_ind([4.065642,3.994241],[3.665414,3.770698])
 # 
 # We also found a significant p value of 0.039 for the difference between mainstream and premium customers.
 
-
 # %%
+## Save data to new file
+chips_data.to_csv('../data/chips_data.csv')
+
+
