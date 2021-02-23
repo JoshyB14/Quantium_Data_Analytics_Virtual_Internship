@@ -5,8 +5,9 @@
 from numpy import core
 import pandas as pd
 import matplotlib.pyplot as plt
+from pandas.core.groupby.generic import ScalarResult
 import seaborn as sns
-
+from scipy.stats import ttest_ind, t
 
 #Pandas settings
 pd.set_option('display.max_columns', None)
@@ -335,7 +336,7 @@ sales_scale_88 = (pre_trial_stores[pre_trial_stores['STORE_NBR']==88]['TOT_SALES
 # Filter for trial period dates
 trial_period = stores_12_months[(stores_12_months['YEAR_MONTH']>=201902) & (stores_12_months['YEAR_MONTH']<=201904)]
 # Filter for control stores on 'STORE_NBR', 'YEAR_MONTH', 'TOT_SALES'
-scales_store_sales = stores_12_months[stores_12_months['STORE_NBR'].isin([233,155,40])][['STORE_NBR', 'YEAR_MONTH'
+scaled_store_sales = stores_12_months[stores_12_months['STORE_NBR'].isin([233,155,40])][['STORE_NBR', 'YEAR_MONTH',
                                                                                         'TOT_SALES']]
 #%%
 # Create function to scale sales data
@@ -354,5 +355,34 @@ def scale(store):
                 return store['TOT_SALES'] * sales_scale_86
         elif store['STORE_NBR']==40:
                 return store['TOT_SALES'] * sales_scale_88
-                
+
 # %%
+# Apply scale function and create new column
+scaled_store_sales['SALES_SCALED'] = scaled_store_sales.apply(lambda store: scale(store), axis=1)
+# Filter out trial store period
+trial_period_scaled_sales = scaled_store_sales[(scaled_store_sales['YEAR_MONTH']>=201902) &
+                                                 (scaled_store_sales['YEAR_MONTH']<=201904)]
+# Filter out pre-trial scaled data
+pretrial_scaled_sales = scaled_store_sales[scaled_store_sales['YEAR_MONTH']<201902]
+
+# %%
+# Null hypothesis that there is no difference between store pre-trial and trial period performance on sales
+# Use ttest_ind to test for null hypoth that two samples have identical average values
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html
+# Loop over each control store
+for control_store in [233, 155, 40]:
+        print(f'Store number: {control_store}')
+        # Compute the t test statistic for the pretrial sales and the trial period sales for each control store
+        print(ttest_ind(pretrial_scaled_sales[pretrial_scaled_sales['STORE_NBR']==control_store]['SALES_SCALED'],
+                trial_period_scaled_sales[trial_period_scaled_sales['STORE_NBR']==control_store]['SALES_SCALED']))
+
+# Outputs:
+
+# Store number: 233
+# Ttest_indResult(statistic=1.1432469352201307, pvalue=0.2859919469281543)
+# Store number: 155
+# Ttest_indResult(statistic=1.0217889604585213, pvalue=0.33678271820066796)
+# Store number: 40
+# Ttest_indResult(statistic=-0.30265739096672245, pvalue=0.7698710330791956)
+
+# No significant difference between control stores pre-trial and trial scaled sales
