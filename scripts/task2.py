@@ -2,10 +2,8 @@
 # # Quantium Data Analytics Virtual Experience - Task2 - Josh Bryden
 # %%
 
-from numpy import core
 import pandas as pd
 import matplotlib.pyplot as plt
-from pandas.core.groupby.generic import ScalarResult
 import seaborn as sns
 from scipy.stats import ttest_ind, t
 
@@ -380,9 +378,104 @@ for control_store in [233, 155, 40]:
 
 # Store number: 233
 # Ttest_indResult(statistic=1.1432469352201307, pvalue=0.2859919469281543)
+
 # Store number: 155
 # Ttest_indResult(statistic=1.0217889604585213, pvalue=0.33678271820066796)
+
 # Store number: 40
 # Ttest_indResult(statistic=-0.30265739096672245, pvalue=0.7698710330791956)
 
-# No significant difference between control stores pre-trial and trial scaled sales
+# Null hypothesis is true - no significant difference between control store pre-trial and trial sales
+
+# %%
+# Compute percentage difference in scaled sales
+# Sort control store sales and drop TOT_SALES
+x = scaled_store_sales.sort_values(by=["STORE_NBR", "YEAR_MONTH"], ascending=[False, True]).reset_index().drop(["TOT_SALES", "index"], axis=1)
+# Sort trial store sales and drop YEAR_MONTH
+y = stores_12_months[stores_12_months["STORE_NBR"].isin([77,86,88])][["STORE_NBR", "YEAR_MONTH", "TOT_SALES"]].reset_index().drop(["index", "YEAR_MONTH"], axis=1)
+# Combine the two
+scaled_sales_percent_diff = pd.concat([x, y], axis=1)
+# Rename columns for control/trial
+scaled_sales_percent_diff.columns = ["control_STORE_NBR", "YEAR_MONTH", "control_ScaledSales", "trial_STORE_NBR", "trial_TOT_SALES"]
+# Compute percent diff in sales
+scaled_sales_percent_diff["sales_percent_diff"] = (scaled_sales_percent_diff["trial_TOT_SALES"] - scaled_sales_percent_diff["control_ScaledSales"]) / (((scaled_sales_percent_diff["trial_TOT_SALES"] + scaled_sales_percent_diff["control_ScaledSales"])/2))
+
+# For ease - create function to compute new column for pre-trial, trial and post trial times
+def period(store):
+    if store < 201902:
+        return "Pre"
+    elif store > 201904:
+        return "Post"
+    else:
+        return "Trial"
+# Apply function to our df
+scaled_sales_percent_diff["trial_period"] = scaled_sales_percent_diff["YEAR_MONTH"].apply(lambda store: period(store))
+# Delete our temporary df for memory optimization 
+del x,y 
+
+# %%
+# Null hypothesis that no difference between trial store and control store pre-trial sales
+for trial_store, control_store in trial_control_dic.items():
+        print(f'Trial store: {trial_store}', f'Control store: {control_store}')
+        print(ttest_ind(pre_trial_stores[pre_trial_stores['STORE_NBR']==trial_store]['TOT_SALES'],
+                pretrial_scaled_sales[pretrial_scaled_sales['STORE_NBR']==control]['SALES_SCALED']))
+
+# Outputs:
+
+# Trial store: 77 Control store: 233
+# Ttest_indResult(statistic=-27.435316685994458, pvalue=3.391608962966685e-12)
+
+# Trial store: 86 Control store: 155
+# Ttest_indResult(statistic=-10.472171690553463, pvalue=2.1706255444373868e-07)
+
+# Trial store: 88 Control store: 40
+# Ttest_indResult(statistic=-5.438369418905365e-15, pvalue=0.9999999999999958)
+
+# Null hypothesis is true - no significant difference between trial store sales and control store scaled sales pre-trial
+# %%
+# Null hypothesis that percent diff in sales between trial and control stores pre-trial
+#  is the same as during the trial - hence no difference in sales from the trial
+for trial_store, control_store in trial_control_dic.items():
+        print(f'Trial store: {trial_store}', f'Control store: {control_store}')
+        # Select where control stores sales were pre-trial
+        x = scaled_sales_percent_diff[(scaled_sales_percent_diff['control_STORE_NBR']==control_store)
+                                & (scaled_sales_percent_diff['trial_period']=='Pre')]
+        # Std of sales_percent_diff
+        std = x['sales_percent_diff'].std()
+        # average of sales_percent_diff 
+        mean = x['sales_percent_diff'].mean()
+        # Loop over each month of the trial period
+        for month in scaled_sales_percent_diff[scaled_sales_percent_diff['trial_period']
+                                                                =='Trial']['YEAR_MONTH'].unique():
+                # Calculate z score - z will hold the score
+                z = scaled_sales_percent_diff[(scaled_sales_percent_diff['YEAR_MONTH']==month) &
+                        (scaled_sales_percent_diff['trial_STORE_NBR']==trial_store)]['sales_percent_diff']
+                # Print z score -->  (score(z)-mean)/std
+                print(f'Month: {month}', f'Z-score: {(float(z)-mean)/std}')
+
+print() # Formatting in output
+# Compute 95% CI
+print(f'95% CI: {t.ppf(0.95, df=len(x)-1)}')
+
+# Outputs:
+
+# Trial store: 77 Control store: 233
+# Month: 201902 Z-score: -0.8435806220494324
+# Month: 201903 Z-score: 2.490446473475577
+# Month: 201904 Z-score: 4.448806995302796
+
+# Trial store: 86 Control store: 155
+# Month: 201902 Z-score: 1.3077596199049548
+# Month: 201903 Z-score: 5.828582596615292
+# Month: 201904 Z-score: 0.7867590051021373
+
+# Trial store: 88 Control store: 40
+# Month: 201902 Z-score: -0.06747939544188027
+# Month: 201903 Z-score: 1.4413280336576062
+# Month: 201904 Z-score: 0.7650631287827987
+
+# 95% CI: 1.9431802803927816
+
+# As such there are 3 months were sales were increased that were significant:
+# March, April for store 77
+# March for store 86
