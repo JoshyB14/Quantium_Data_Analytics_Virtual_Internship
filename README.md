@@ -10,6 +10,6 @@ The repo is structured as follows:
 - data -- contains csv files provided for the program + saved csv files from task 1
 - scripts -- .py script files for task 1/2. These were used to create the notebooks for viewing on github
 - notebooks -- ipynb files created from the scripts for viewing on github
-
+- instructions.md -- markdown file of the instructions for each task
  
  
